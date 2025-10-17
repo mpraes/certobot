@@ -8,3 +8,65 @@ wheels/
 
 # Virtual environments
 .venv
+venv/
+env/
+
+# Environment variables
+.env.local
+.env.production
+
+# Database
+*.db
+*.sqlite3
+
+# Redis
+dump.rdb
+
+# Logs
+*.log
+logs/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Coverage reports
+coverage.xml
+*.cover
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Alembic
+# Keep alembic.ini and versions/ but ignore temporary files
+alembic/__pycache__/
