@@ -1,0 +1,78 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: certobot_postgres
+    environment:
+      POSTGRES_DB: certobot
+      POSTGRES_USER: certobot_user
+      POSTGRES_PASSWORD: certobot_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U certobot_user -d certobot"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: certobot_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Certobot Backend API
+  certobot-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: certobot_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://certobot_user:certobot_password@postgres:5432/certobot
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - ./.env:/app/.env
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Mock CRM API (separate service for testing)
+  mock-crm:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.mock-crm
+    container_name: certobot_mock_crm
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://certobot_user:certobot_password@postgres:5432/certobot
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./mock_crm:/app/mock_crm
+      - ./.env:/app/.env
+    command: uvicorn mock_crm.main:app --host 0.0.0.0 --port 8001 --reload
+
+volumes:
+  postgres_data:
+  redis_data:
